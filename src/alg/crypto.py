@@ -18,6 +18,10 @@ def verify_sign(verify_key, sign, msg):
 
 
 def sha256(msg):
+    if not isinstance(msg, bytes):
+        msg = str(msg)
+        if isinstance(msg, str):
+            msg = msg.encode()
     digest = nacl.hash.sha256(msg, encoder=nacl.encoding.HexEncoder)
     return digest
 

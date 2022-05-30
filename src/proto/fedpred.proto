@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+service FedPred {
+  rpc keyex(HelloMsg) returns (HelloRes) {}
+  rpc enc_msg(EncMsg) returns (EncMsg) {}
+}
+
+message void {}
+
+message Sign{
+  bytes ct = 1;
+  bytes pk = 2;
+  bytes msg = 3;
+}
+
+message HelloMsg{
+  Sign sign = 1;
+  uint32 r = 2;
+}
+
+message HelloRes {
+  uint32 r = 1;
+}
+
+message EncMsg{
+   string action = 1;
+   bytes ct = 2;
+}
