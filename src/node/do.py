@@ -24,9 +24,9 @@ class GrpcService(fedpred_pb2_grpc.FedPred):
     def enc_msg(self, request, context):
         msg = self.do.mo_box.decrypt(request.ct)
         if request.action == 'range':
-            ranges = pickle.loads(msg)
+            res = pickle.loads(msg)
             logger.info('Received margins.')
-            print(ranges)
+            self.do.gen_margin(ka=res['ka'], rgs=res['range'])
         return fedpred_pb2.EncMsg(action='range', ct=b'ok')
 
 
@@ -48,3 +48,23 @@ class DataOwner:
 
     def get_box(self):
         self.mo_box = kdf_box(self.mo_s, str(self.secret).encode())
+
+    def gen_margin(self, ka, rgs):
+        def inr(x, rg):
+            return rg[0] <= x <= rg[1]
+
+        vals = self.data[ka]
+        for i in range(len(vals)):
+            if inr(vals[i], rgs[0]):
+                vals[i] -= rgs[0][1] - rgs[0][0]
+
+        for i in range(1, len(rgs)):
+            st = rgs[i - 1][1]
+            ori = (st, rgs[i][1])
+            nrg = (st, rgs[i][0])
+            k = (nrg[1] - nrg[0]) / (ori[1] - ori[0])
+            for j in range(len(vals)):
+                if inr(vals[i], ori):
+                    vals[i] = (vals[i] - st) * k + st
+
+        self.data[ka] = vals

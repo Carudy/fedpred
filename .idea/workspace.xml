@@ -2,19 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0e8beb8b-d8ae-43ff-943f-174cc4d1e6f1" name="变更" comment="">
-      <change afterPath="$PROJECT_DIR$/src/proto/fedpred.proto" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/alg/crypto.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/alg/crypto.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/alg/data.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/alg/data.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/info.log" beforeDir="false" afterPath="$PROJECT_DIR$/src/info.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/node/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/node/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/node/do.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/node/do.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/node/mo.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/node/mo.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/proto/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/proto/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/proto/demo.proto" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/proto/demo_pb2.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/proto/demo_pb2_grpc.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +85,7 @@
       <option name="presentableId" value="Default" />
       <updated>1652692101286</updated>
       <workItem from="1652692102385" duration="31509000" />
-      <workItem from="1653916714980" duration="3465000" />
+      <workItem from="1653916714980" duration="10495000" />
     </task>
     <servers />
   </component>

@@ -10,6 +10,8 @@ from ..proto import *
 
 class ModelOwner:
     def __init__(self, co, model, margin=5):
+        self.enc_box = None
+        self.enc_tree = None
         self.stub = None
         for k, v in locals().items():
             setattr(self, k, v)
@@ -38,25 +40,53 @@ class ModelOwner:
     def send_enc_tree(self):
         self.enc_tree = copy.deepcopy(self.model.root)
 
+        kvs = defaultdict(list)
         ranges = defaultdict(list)
 
-        def dfs(node):
+        def dfs(node, f=True):
             if node.res is None:
-                node.ka = sha256(node.ka)
-                ranges[node.ka].append((node.kv - self.margin, node.kv + self.margin))
-                node.kv = random.uniform(*ranges[node.ka][-1])
-                doi = self.ka_map[node.ka]
-                box = self.enc_box[doi]
-                node.kv = box.encrypt(pickle.dumps(node.kv))
+                if f:
+                    node.ka = sha256(node.ka)
+                    kvs[node.ka].append(node.kv)
+                else:
+                    for rg in ranges[ka]:
+                        if rg[0] <= node.kv <= rg[1]:
+                            node.kv = random.uniform(*rg)
+                            doi = self.ka_map[node.ka]
+                            box = self.enc_box[doi]
+                            node.kv = box.encrypt(pickle.dumps(node.kv))
+                            break
                 dfs(node.lc)
                 dfs(node.rc)
             else:
-                node.res = None
+                if not f:
+                    node.res = None
 
         dfs(self.enc_tree)
-        for ka, range in ranges.items():
+
+        for ka, vals in kvs.items():
+            vals.sort()
+            st = vals[0] - self.margin
+            for i in range(len(vals) - 1):
+                lens = vals[i + 1] - vals[i]
+                if lens >= 3 * self.margin:
+                    ed = vals[i] + self.margin
+                    ranges[ka].append((st, ed))
+                    st = vals[i + 1] - self.margin
+                else:
+                    ed = vals[i] + lens * 0.33
+                    ranges[ka].append((st, ed))
+                    st = vals[i + 1] - lens * 0.33
+            ranges[ka].append((st, vals[-1] + self.margin))
+
+        for ka, rg in ranges.items():
             doi = self.ka_map[ka]
             logger.info(f'Sending margin to {doi}, ka: {ka}')
             box = self.enc_box[doi]
-            msg = box.encrypt(pickle.dumps(range))
+            msg = box.encrypt(pickle.dumps({
+                'ka': ka,
+                'range': rg,
+            }))
             self.stub[doi].enc_msg(fedpred_pb2.EncMsg(action='range', ct=msg))
+
+        dfs(self.enc_tree, False)
