@@ -38,6 +38,20 @@ class ModelOwner:
             self.enc_box[name] = kdf_box(str(self.secret).encode(), _s)
 
     def send_enc_tree(self):
+        cnt = 0
+        self.leaf_map = {}
+
+        def dfs_leaf_number(node):
+            nonlocal cnt
+            if node.res is None:
+                dfs_leaf_number(node.lc)
+                dfs_leaf_number(node.rc)
+            else:
+                node.pos = cnt
+                self.leaf_map[cnt] = node
+                cnt += 1
+
+        dfs_leaf_number(self.model.root)
         self.enc_tree = copy.deepcopy(self.model.root)
 
         kvs = defaultdict(list)
