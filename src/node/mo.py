@@ -65,13 +65,12 @@ class ModelOwner:
                 else:
                     for rg in ranges[ka]:
                         if rg[0] <= node.kv <= rg[1]:
-                            node.kv = random.uniform(*rg)
                             doi = self.ka_map[node.ka]
                             box = self.enc_box[doi]
                             node.kv = box.encrypt(pickle.dumps(node.kv))
                             break
-                dfs(node.lc)
-                dfs(node.rc)
+                dfs(node.lc, f)
+                dfs(node.rc, f)
             else:
                 if not f:
                     node.res = None
@@ -104,3 +103,10 @@ class ModelOwner:
             self.stub[doi].enc_msg(fedpred_pb2.EncMsg(action='range', ct=msg))
 
         dfs(self.enc_tree, False)
+
+        self.co.receive_model(pickle.dumps(self.enc_tree))
+
+    def query(self, x):
+        leaf_id = self.co.query(x)
+        c = self.leaf_map[leaf_id].res
+        return max(c, key=c.get)

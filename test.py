@@ -1,4 +1,5 @@
 import pickle
+import random
 
 import numpy as np
 
@@ -31,6 +32,7 @@ def init():
     split_iris(dos)
 
     mo.connect_dos(dos)
+    co.connect_dos(dos)
 
     return mo, co, dos
 
@@ -39,3 +41,11 @@ if __name__ == '__main__':
     mo, co, dos = init()
     mo.keyex()
     mo.send_enc_tree()
+
+    xs, ys = read_iris()
+    n = 0
+    for i in range(len(ys)):
+        res = mo.query(i)
+        if res == ys[i]:
+            n += 1
+    logger.info(f'Acc: {n * 100 / len(ys):.2f}%')

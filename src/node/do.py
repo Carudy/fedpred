@@ -22,12 +22,19 @@ class GrpcService(fedpred_pb2_grpc.FedPred):
         return fedpred_pb2.HelloRes(r=self.do.secret)
 
     def enc_msg(self, request, context):
-        msg = self.do.mo_box.decrypt(request.ct)
         if request.action == 'range':
+            msg = self.do.mo_box.decrypt(request.ct)
             res = pickle.loads(msg)
             logger.info('Received margins.')
-            self.do.gen_margin(ka=res['ka'], rgs=res['range'])
-        return fedpred_pb2.EncMsg(action='range', ct=b'ok')
+            # self.do.gen_margin(ka=res['ka'], rgs=res['range'])
+            return fedpred_pb2.EncMsg(action='range', ct=b'ok')
+
+        elif request.action == 'query':
+            msg = pickle.loads(request.ct)
+            kv = self.do.mo_box.decrypt(msg['kv'])
+            kv = pickle.loads(kv)
+            res = bool(self.do.data[msg['ka']][msg['uid']] <= kv)
+            return fedpred_pb2.EncMsg(action='query', ct=pickle.dumps(res))
 
 
 class DataOwner:
