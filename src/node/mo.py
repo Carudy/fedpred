@@ -39,74 +39,25 @@ class ModelOwner:
 
     def send_enc_tree(self):
         cnt = 0
-        self.leaf_map = {}
-
-        def dfs_leaf_number(node):
-            nonlocal cnt
-            if node.res is None:
-                dfs_leaf_number(node.lc)
-                dfs_leaf_number(node.rc)
-            else:
-                node.pos = cnt
-                self.leaf_map[cnt] = node
-                cnt += 1
-
-        dfs_leaf_number(self.model.root)
+        self.node_map = {}
         self.enc_tree = copy.deepcopy(self.model.root)
 
-        kvs = defaultdict(list)
-        ranges = defaultdict(list)
-
-        def dfs(node, f=True):
+        def dfs(node, ori):
+            nonlocal cnt
+            node.pos = cnt
+            ori.pos = cnt
+            self.node_map[cnt] = ori
+            cnt += 1
             if node.res is None:
-                if f:
-                    node.ka = sha256(node.ka)
-                    kvs[node.ka].append(node.kv)
-                else:
-                    for rg in ranges[ka]:
-                        if rg[0] <= node.kv <= rg[1]:
-                            doi = self.ka_map[node.ka]
-                            box = self.enc_box[doi]
-                            node.kv = box.encrypt(pickle.dumps(node.kv))
-                            break
-                dfs(node.lc, f)
-                dfs(node.rc, f)
-            else:
-                if not f:
-                    node.res = None
+                node.ka = sha256(node.ka)
+                node.kv = None
+                dfs(node.lc, ori.lc)
+                dfs(node.rc, ori.rc)
 
-        dfs(self.enc_tree)
-
-        for ka, vals in kvs.items():
-            vals.sort()
-            st = vals[0] - self.margin
-            for i in range(len(vals) - 1):
-                lens = vals[i + 1] - vals[i]
-                if lens >= 3 * self.margin:
-                    ed = vals[i] + self.margin
-                    ranges[ka].append((st, ed))
-                    st = vals[i + 1] - self.margin
-                else:
-                    ed = vals[i] + lens * 0.33
-                    ranges[ka].append((st, ed))
-                    st = vals[i + 1] - lens * 0.33
-            ranges[ka].append((st, vals[-1] + self.margin))
-
-        for ka, rg in ranges.items():
-            doi = self.ka_map[ka]
-            logger.info(f'Sending margin to {doi}, ka: {ka}')
-            box = self.enc_box[doi]
-            msg = box.encrypt(pickle.dumps({
-                'ka': ka,
-                'range': rg,
-            }))
-            self.stub[doi].enc_msg(fedpred_pb2.EncMsg(action='range', ct=msg))
-
-        dfs(self.enc_tree, False)
-
+        dfs(self.enc_tree, self.model.root)
         self.co.receive_model(pickle.dumps(self.enc_tree))
 
     def query(self, x):
         leaf_id = self.co.query(x)
-        c = self.leaf_map[leaf_id].res
+        c = self.node_map[leaf_id].res
         return max(c, key=c.get)

@@ -1,4 +1,6 @@
 import pickle
+import random
+
 import grpc
 
 from ..alg import *
@@ -24,17 +26,22 @@ class Coodinator:
 
     def query(self, x):
         now = self.model
-        while not hasattr(now, 'pos'):
+        while now.lc:
             doi = self.ka_map[now.ka]
-            msg = {
-                'uid': x,
-                'ka': now.ka,
-                'kv': now.kv,
-            }
-            msg = pickle.dumps(msg)
-            res = self.stub[doi].enc_msg(fedpred_pb2.EncMsg(action='query', ct=msg))
-            res = pickle.loads(res.ct)
-            if res:
+            r = str(random.random()).encode()
+            ct = self.mo.enc_box[doi].encrypt(r)
+            param = int.from_bytes(ct, "big")
+            if param < 2 ** 12:
+                logger.warning('Ct too small.')
+            opf = get_ope(param)
+            v0 = self.dos[doi].data[now.ka][x]
+            v1 = self.mo.node_map[now.pos].kv
+            c0 = opf(v0)
+            c1 = opf(v1)
+            if (v0 - v1) * (c0 - c1) <= 0 and v0 != v1:
+                logger.warning('OPE failed!')
+                print(v0, v1, c0, c1, param, opf.a, opf.b, opf.c)
+            if c0 <= c1:
                 now = now.lc
             else:
                 now = now.rc
