@@ -1,5 +1,6 @@
 import pickle
 import random
+from phe import paillier
 
 import grpc
 
@@ -13,6 +14,7 @@ class Coodinator:
         self.model = None
         self.ka_map = {}
         self.stub = {}
+        self.phe_pk, self.phe_sk = paillier.generate_paillier_keypair()
 
     def receive_model(self, model):
         self.model = pickle.loads(model)
@@ -26,6 +28,8 @@ class Coodinator:
 
     def query(self, x):
         now = self.model
+        opf = True
+
         while now.lc:
             doi = self.ka_map[now.ka]
             r = str(random.random()).encode()
@@ -33,15 +37,23 @@ class Coodinator:
             param = int.from_bytes(ct, "big")
             if param < 2 ** 12:
                 logger.warning('Ct too small.')
-            opf = get_ope(param)
             v0 = self.dos[doi].data[now.ka][x]
             v1 = self.mo.node_map[now.pos].kv
-            c0 = opf(v0)
-            c1 = opf(v1)
-            if (v0 - v1) * (c0 - c1) <= 0 and v0 != v1:
-                logger.warning('OPE failed!')
-                print(v0, v1, c0, c1, param, opf.a, opf.b, opf.c)
-            if c0 <= c1:
+            if opf:
+                opf = get_ope(param)
+                c0 = opf(v0)
+                c1 = opf(v1)
+            else:
+                c0, c1 = self.phe_pk.encrypt(float(v0)), self.phe_pk.encrypt(float(v1))
+                df = c0 - c1
+                noise = random.randint(123456, 789012)
+                df = df * (1. / noise)
+                df = self.phe_sk.decrypt(df)
+            if opf:
+                if (v0 - v1) * (c0 - c1) <= 0 and v0 != v1:
+                    logger.warning('OPE failed!')
+                    print(v0, v1, c0, c1, param, opf.a, opf.b, opf.c)
+            if (opf and c0 <= c1) or (opf==False and df <= 0):
                 now = now.lc
             else:
                 now = now.rc
