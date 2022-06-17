@@ -41,4 +41,4 @@ plt.yticks(fontproperties=font_family, size=font_size - 2)
 plt.legend(prop={'family': font_family, 'size': font_size})
 
 plt.savefig(BASE_PATH / f'figure/{name}.pdf', bbox_inches='tight')
-plt.show()
+# plt.show()

@@ -59,6 +59,7 @@ if __name__ == '__main__':
     # #
     xs, ys = read_libsvm('cod-rna')
     # mo.model.score(xs, ys)
+
     #
     # xp = []
     # yp = []
@@ -82,3 +83,22 @@ if __name__ == '__main__':
     #
     # with open(BASE_PATH / 'tmp.txt', 'w', encoding='utf-8') as fp:
     #     fp.write(f'{xp}\n\n{yp}')
+
+    # xp = random.sample(range(len(xs)), 6)
+    xp = [-5, -1.2, 0.34, 1, 2.8, 12]
+    yp = []
+    for x in xp:
+        print(f'for {x}')
+        _y = []
+        nn = 200
+        for i in range(nn):
+            ps = [random.randint(1, (1<<16)) for _ in range(3)]
+            for i in range(len(ps)):
+                ps[i] = (ps[i] >> 6) / max((ps[i] & ((1<<6)-1), 1))
+            f = OPF(*ps)
+            v = f(x)
+            print(f'\t => {v}')
+            _y.append(float(f'{v:.3f}'))
+        yp.append(_y)
+    with open(BASE_PATH / 'box.txt', 'w', encoding='utf-8') as fp:
+        fp.write(f'{xp}\n\n{yp}')

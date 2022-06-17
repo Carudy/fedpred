@@ -1,12 +1,12 @@
 def get_ope(param):
     ps = []
-    d = 1 << 4
+    d = (1 << 16) - 1
     while len(ps) < 3:
         now = 0
         while not now:
-            param //= d
             now = param & d
-        ps.append(now)
+            param //= d
+        ps.append((now >> 6) / max((now & ((1<<6)-1), 1)))
     return OPF(*ps)
 
 
