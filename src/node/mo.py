@@ -1,11 +1,11 @@
 import copy
 import pickle
 import random
-import grpc
+# import grpc
 from collections import defaultdict
 
 from ..alg import *
-from ..proto import *
+# from ..proto import *
 
 
 class ModelOwner:
@@ -17,25 +17,30 @@ class ModelOwner:
             setattr(self, k, v)
 
         self.sign_key, self.verify_key = gen_sign_key()
-        self.sign_msg = fedpred_pb2.Sign(ct=self.sign_key.sign(b'mo'), pk=self.verify_key, msg=b'mo')
+        # self.sign_msg = fedpred_pb2.Sign(ct=self.sign_key.sign(b'mo'), pk=self.verify_key, msg=b'mo')
         self.secret = random.choice(range(1000))
-        self.hello_msg = fedpred_pb2.HelloMsg(sign=self.sign_msg, r=self.secret)
+        # self.hello_msg = fedpred_pb2.HelloMsg(sign=self.sign_msg, r=self.secret)
         self.ka_map = {}
 
     def connect_dos(self, dos):
         self.stub = {}
+        self.dos = dos
         for do in dos:
-            channel = grpc.insecure_channel(f'{do.addr}:{do.port}')
-            self.stub[do.name] = fedpred_pb2_grpc.FedPredStub(channel)
+            # channel = grpc.insecure_channel(f'{do.addr}:{do.port}')
+            # self.stub[do.name] = fedpred_pb2_grpc.FedPredStub(channel)
             for attr in do.data.keys():
                 self.ka_map[attr] = do.name
 
     def keyex(self):
         self.enc_box = {}
-        for name, stub in self.stub.items():
-            res = stub.keyex(self.hello_msg)
-            _s = str(res.r).encode()
-            self.enc_box[name] = kdf_box(str(self.secret).encode(), _s)
+        # for name, stub in self.stub.items():
+        #     res = stub.keyex(self.hello_msg)
+        #     _s = str(res.r).encode()
+        #     self.enc_box[name] = kdf_box(str(self.secret).encode(), _s)
+        for do in self.dos:
+            _s = str(do.secret).encode()
+            self.enc_box[do.name] = kdf_box(str(self.secret).encode(), _s) 
+            do.mo_box = self.enc_box[do.name]
 
     def send_enc_tree(self):
         cnt = 0
@@ -57,7 +62,7 @@ class ModelOwner:
         dfs(self.enc_tree, self.model.root)
         self.co.receive_model(pickle.dumps(self.enc_tree))
 
-    def query(self, x):
-        leaf_id = self.co.query(x)
+    def query(self, x, comm_arr=None):
+        leaf_id = self.co.query(x, comm_arr)
         c = self.node_map[leaf_id].res
         return max(c, key=c.get)

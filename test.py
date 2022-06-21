@@ -52,39 +52,7 @@ def init():
     return mo, co, dos
 
 
-if __name__ == '__main__':
-    # mo, co, dos = init()
-    # mo.keyex()
-    # mo.send_enc_tree()
-    # #
-    xs, ys = read_libsvm('cod-rna')
-    # mo.model.score(xs, ys)
-
-    #
-    # xp = []
-    # yp = []
-    # st = time.time()
-    #
-    # n = 0
-    # for i in tqdm(range(len(ys))):
-    #     res = mo.query(i)
-    #     if res == ys[i]:
-    #         n += 1
-    #     else:
-    #         # print(i, res, ys[i])
-    #         pass
-    #     if (i + 1) % 20 == 0:
-    #         _t = time.time() - st
-    #         xp.append(i + 1)
-    #         yp.append(_t)
-    #     if i >= 400:
-    #         break
-    # logger.info(f'Acc: {n * 100 / len(ys):.2f}%')
-    #
-    # with open(BASE_PATH / 'tmp.txt', 'w', encoding='utf-8') as fp:
-    #     fp.write(f'{xp}\n\n{yp}')
-
-    # xp = random.sample(range(len(xs)), 6)
+def box_plot():
     xp = [-5, -1.2, 0.34, 1, 2.8, 12]
     yp = []
     for x in xp:
@@ -92,9 +60,9 @@ if __name__ == '__main__':
         _y = []
         nn = 200
         for i in range(nn):
-            ps = [random.randint(1, (1<<16)) for _ in range(3)]
+            ps = [random.randint(1, (1 << 16)) for _ in range(3)]
             for i in range(len(ps)):
-                ps[i] = (ps[i] >> 6) / max((ps[i] & ((1<<6)-1), 1))
+                ps[i] = (ps[i] >> 6) / max((ps[i] & ((1 << 6)-1), 1))
             f = OPF(*ps)
             v = f(x)
             print(f'\t => {v}')
@@ -102,3 +70,51 @@ if __name__ == '__main__':
         yp.append(_y)
     with open(BASE_PATH / 'box.txt', 'w', encoding='utf-8') as fp:
         fp.write(f'{xp}\n\n{yp}')
+
+
+def test_compute_time():
+    xs, ys = read_libsvm('cod-rna')
+    mo, co, dos = init()
+    mo.keyex()
+    mo.send_enc_tree()
+    xp = []
+    yp = []
+    logger.info("Start test.")
+    st = time.time()
+
+    n = 0
+    comm_arr = [0]
+    for i in tqdm(range(len(ys))):
+        res = mo.query(i, comm_arr)
+        if res == ys[i]:
+            n += 1
+        else:
+            # print(i, res, ys[i])
+            pass
+        if (i + 1) % 20 == 0:
+            _t = time.time() - st
+            xp.append(i + 1)
+            yp.append(_t)
+            comm_arr.append(0)
+        if i >= 400:
+            break
+    logger.info(f'Acc: {n * 100 / len(ys):.2f}%')
+
+    zp = [0] * len(comm_arr)
+    for i in range(len(zp)):
+        zp[i] = comm_arr[i] + zp[i-1]
+
+    with open(BASE_PATH / 'tmp.txt', 'w', encoding='utf-8') as fp:
+        fp.write(f'{xp}\n\n{yp}\n\n{zp[:len(xp)]}')
+
+    xp = random.sample(range(len(xs)), 6)
+
+
+if __name__ == '__main__':
+    # mo, co, dos = init()
+    # mo.keyex()
+    # mo.send_enc_tree()
+    # #
+    # xs, ys = read_libsvm('cod-rna')
+    # mo.model.score(xs, ys)
+    test_compute_time()

@@ -1,11 +1,12 @@
 import pickle
 import random
+import sys
 from phe import paillier
 
-import grpc
+# import grpc
 
 from ..alg import *
-from ..proto import *
+# from ..proto import *
 
 
 class Coodinator:
@@ -21,12 +22,12 @@ class Coodinator:
 
     def connect_dos(self, dos):
         for do in dos:
-            channel = grpc.insecure_channel(f'{do.addr}:{do.port}')
-            self.stub[do.name] = fedpred_pb2_grpc.FedPredStub(channel)
+            # channel = grpc.insecure_channel(f'{do.addr}:{do.port}')
+            # self.stub[do.name] = fedpred_pb2_grpc.FedPredStub(channel)
             for attr in do.data.keys():
                 self.ka_map[attr] = do.name
 
-    def query(self, x):
+    def query(self, x, comm_arr=None):
         now = self.model
         opf = True
 
@@ -43,12 +44,18 @@ class Coodinator:
                 opf = get_ope(param)
                 c0 = opf(v0)
                 c1 = opf(v1)
+                if comm_arr is not None:
+                    ov = sys.getsizeof(c0) + sys.getsizeof(c1) + sys.getsizeof(ct)
+                    comm_arr[-1] += ov
             else:
                 c0, c1 = self.phe_pk.encrypt(float(v0)), self.phe_pk.encrypt(float(v1))
                 df = c0 - c1
                 noise = random.randint(123456, 789012)
                 df = df * (1. / noise)
                 df = self.phe_sk.decrypt(df)
+                if comm_arr is not None:
+                    ov = sys.getsizeof(c0) + sys.getsizeof(df)
+                    comm_arr[-1] += ov
             if opf:
                 if (v0 - v1) * (c0 - c1) <= 0 and v0 != v1:
                     logger.warning('OPE failed!')
