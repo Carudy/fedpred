@@ -29,7 +29,7 @@ class Coodinator:
 
     def query(self, x, comm_arr=None):
         now = self.model
-        opf = True
+        opf = False
 
         while now.lc:
             doi = self.ka_map[now.ka]
@@ -45,7 +45,7 @@ class Coodinator:
                 c0 = opf(v0)
                 c1 = opf(v1)
                 if comm_arr is not None:
-                    ov = sys.getsizeof(c0) + sys.getsizeof(c1) + sys.getsizeof(ct)
+                    ov = sys.getsizeof(np.float(c0)) + sys.getsizeof(np.float(c1)) + sys.getsizeof(float(r))
                     comm_arr[-1] += ov
             else:
                 c0, c1 = self.phe_pk.encrypt(float(v0)), self.phe_pk.encrypt(float(v1))
@@ -54,7 +54,7 @@ class Coodinator:
                 df = df * (1. / noise)
                 df = self.phe_sk.decrypt(df)
                 if comm_arr is not None:
-                    ov = sys.getsizeof(c0) + sys.getsizeof(df)
+                    ov = sys.getsizeof(c0) * 2
                     comm_arr[-1] += ov
             if opf:
                 if (v0 - v1) * (c0 - c1) <= 0 and v0 != v1:

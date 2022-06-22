@@ -1,44 +1,68 @@
 import matplotlib.pyplot as plt
+import os
+from pathlib import Path
 
-from src.util.path import BASE_PATH
+BASE_PATH = Path(os.path.realpath(__file__)).parent.parent / 'src'
 
 plt.style.use('seaborn-white')
 
 # # *********************************** data **********************************************
-name = 'exp-speed'
+name = 'exp-comp'
 x_l = '#Samples'
 y_l = 'Time (s)'
 x = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400]
 y = [
     {
-        'label': r'Proposed protocol',
+        'label': r'Computation cost of this work',
         'cl': 'b.-',
         'ys': [0.006001949310302734, 0.01199960708618164, 0.018973112106323242, 0.025972843170166016, 0.03397250175476074, 0.04199624061584473, 0.049001455307006836, 0.05700063705444336, 0.0630028247833252, 0.07000279426574707, 0.07700252532958984, 0.08300042152404785, 0.0910029411315918, 0.09799981117248535, 0.1040029525756836, 0.11000204086303711, 0.11700034141540527, 0.1250019073486328, 0.13200068473815918, 0.14000153541564941],
     },
     {
-        'label': r'HE-based comparison',
+        'label': r'Computation cost of HE-based method',
         'cl': 'g.-',
         'ys': [13.423310041427612, 27.00786805152893, 42.14134502410889, 57.53962588310242, 73.44236660003662, 90.632483959198, 108.45700645446777, 127.27332711219788, 144.4138035774231, 161.90819811820984, 178.95950722694397, 195.746440410614, 212.9769208431244, 230.4174132347107, 246.50124883651733, 260.48227977752686, 277.7992615699768, 295.1454975605011, 312.668071269989, 331.20997977256775],
     },
+    {
+        'label': r'Message overhead of this work',
+        'cl': '.-.',
+        'ys': [16632, 33624, 52632, 72000, 91944, 113544, 136008, 160056, 181656, 203760, 225144, 245736, 267624, 289728, 310104, 327816, 349992, 372240, 394704, 418464],
+    },
+    {
+        'label': r'Message overhead of HE-based method',
+        'cl': 'c.-.',
+        'ys': [33216, 67200, 105216, 143952, 183840, 227040, 271968, 320064, 363264, 407472, 450240, 492144, 535920, 580128, 620880, 656304, 700656, 745152, 790080, 837600]
+    },
+
 ]
 # *********************************** draw **********************************************
 font_family = 'Times New Roman'
 font_size = 26
 font_dict = {'family': font_family, 'size': font_size}
-plt.figure(figsize=(12, 8))
 
-plt.tick_params(labelright=True)
+fig, ax1 = plt.subplots(figsize=(12, 8))
+ax2 = ax1.twinx()
+ax1.set_xlabel(x_l, fontdict=font_dict)
+ax1.set_ylabel(y_l, fontdict=font_dict)
+ax2.set_ylabel('Message size (KB)', fontdict=font_dict)
 
-for i in y:
-    plt.plot(x, i['ys'], i['cl'], label=i['label'])
+# plt.figure(figsize=(12, 8))
+# plt.tick_params(labelright=True)
 
-plt.xlabel(x_l, fontdict=font_dict)
-plt.ylabel(y_l, fontdict=font_dict)
+for i in y[:2]:
+    ax1.plot(x, i['ys'], i['cl'], label=i['label'])
+
+for i in y[2:]:
+    i['ys'] = [j / 1000 for j in i['ys']]
+    ax2.plot(x, i['ys'], i['cl'], label=i['label'])
+
+# plt.xlabel(x_l, fontdict=font_dict)
+# plt.ylabel(y_l, fontdict=font_dict)
 
 plt.xticks(fontproperties=font_family, size=font_size - 2)
 plt.yticks(fontproperties=font_family, size=font_size - 2)
 
-plt.legend(prop={'family': font_family, 'size': font_size})
+ax1.legend(loc='upper left', bbox_to_anchor=(0, 1), prop={'family': font_family, 'size': 18})
+ax2.legend(loc='upper left', bbox_to_anchor=(0, 0.88), prop={'family': font_family, 'size': 18})
 
 plt.savefig(BASE_PATH / f'figure/{name}.pdf', bbox_inches='tight')
-# plt.show()
+plt.show()

@@ -96,7 +96,7 @@ def test_compute_time():
             xp.append(i + 1)
             yp.append(_t)
             comm_arr.append(0)
-        if i >= 400:
+        if i >= 80:
             break
     logger.info(f'Acc: {n * 100 / len(ys):.2f}%')
 
